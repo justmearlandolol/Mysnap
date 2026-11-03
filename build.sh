@@ -5,10 +5,16 @@ cd "$(dirname "$0")"
 rm -rf build Mysnap.app
 mkdir -p build Mysnap.app/Contents/MacOS Mysnap.app/Contents/Resources
 
-echo "[1/4] Kompilasi Mysnap.m (target minimum macOS 10.13)..."
-clang -fobjc-arc -O2 -Wall -mmacosx-version-min=10.13 \
-  -framework Cocoa -framework Carbon -framework ApplicationServices \
-  Mysnap.m -o build/Mysnap
+echo "[1/4] Kompilasi Mysnap.m (target minimum macOS 10.13, universal2 bila toolchain mendukung)..."
+COMMON=(-fobjc-arc -O2 -Wall -framework Cocoa -framework Carbon -framework ApplicationServices)
+clang "${COMMON[@]}" -target x86_64-apple-macos10.13 Mysnap.m -o build/Mysnap-x86_64
+if clang "${COMMON[@]}" -target arm64-apple-macos11 Mysnap.m -o build/Mysnap-arm64 2> build/arm64.log; then
+  lipo -create build/Mysnap-x86_64 build/Mysnap-arm64 -output build/Mysnap
+  echo "  -> binary universal2: x86_64 (macOS 10.13+) + arm64 (Apple Silicon)"
+else
+  mv build/Mysnap-x86_64 build/Mysnap
+  echo "  -> toolchain tidak mendukung slice arm64; dipakai binary x86_64 saja (tetap target 10.13)"
+fi
 
 echo "[2/4] Menyusun bundle Mysnap.app..."
 mv build/Mysnap Mysnap.app/Contents/MacOS/Mysnap
