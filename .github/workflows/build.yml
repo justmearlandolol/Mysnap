@@ -9,10 +9,21 @@ on:
 jobs:
   build:
     name: Build macOS app (deployment target 10.13)
-    runs-on: macos-13
+    runs-on: macos-15
     steps:
       - name: Checkout sumber
         uses: actions/checkout@v4
+
+      - name: Pilih Xcode 16.x (floor deployment 10.13 terverifikasi)
+        run: |
+          for XC in /Applications/Xcode_16.4.app /Applications/Xcode_16.3.app /Applications/Xcode_16.2.app /Applications/Xcode_16.1.app /Applications/Xcode_16.app; do
+            if [ -d "$XC" ]; then
+              sudo xcode-select -s "$XC/Contents/Developer"
+              echo "Memakai $XC"
+              break
+            fi
+          done
+          xcode-select -p
 
       - name: Informasi toolchain
         run: |
@@ -39,10 +50,10 @@ jobs:
         run: |
           gh release create "${GITHUB_REF_NAME}" Mysnap-macOS.zip \
             --title "Mysnap ${GITHUB_REF_NAME}" \
-            --notes "Build otomatis GitHub Actions (runner macos-13). Dikompilasi dengan deployment target macOS 10.13, tetapi BELUM diuji berjalan di High Sierra karena runner menggunakan macOS lebih baru."
+            --notes "Build otomatis GitHub Actions (runner macos-15, binary universal2). Dikompilasi dengan deployment target macOS 10.13, tetapi BELUM diuji berjalan di High Sierra karena runner menggunakan macOS lebih baru."
 
       - name: Catatan kejujuran build
         run: |
-          echo "Runner ini macOS 13 (Ventura), bukan High Sierra."
-          echo "Artifact dikompilasi dengan -mmacosx-version-min=10.13 dan hanya memakai API yang ada di 10.13,"
-          echo "namun klaim 'teruji di High Sierra' TIDAK dibuat karena tidak ada perangkat uji 10.13 di pipeline ini."
+          echo "Runner ini macOS 15 (Sequoia, Apple Silicon), bukan High Sierra; label macos-13 sudah dipensiunkan GitHub per 4 Des 2025."
+          echo "Binary universal2: slice x86_64 ber-target macOS 10.13 (untuk mesin High Sierra Intel) dan slice arm64 ber-target macOS 11."
+          echo "Klaim 'teruji di High Sierra' TIDAK dibuat karena tidak ada perangkat uji 10.13 di pipeline ini."
