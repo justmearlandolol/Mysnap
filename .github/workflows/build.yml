@@ -1,0 +1,48 @@
+name: Build Mysnap
+
+on:
+  push:
+    branches: [main, master]
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build macOS app (deployment target 10.13)
+    runs-on: macos-13
+    steps:
+      - name: Checkout sumber
+        uses: actions/checkout@v4
+
+      - name: Informasi toolchain
+        run: |
+          sw_vers
+          xcodebuild -version
+          clang --version
+
+      - name: Kompilasi dan kemas Mysnap.app
+        run: bash build.sh
+
+      - name: Bungkus artifact zip
+        run: ditto -c -k --keepParent Mysnap.app Mysnap-macOS.zip
+
+      - name: Unggah artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mysnap-macOS
+          path: Mysnap-macOS.zip
+
+      - name: Buat release (khusus tag)
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" Mysnap-macOS.zip \
+            --title "Mysnap ${GITHUB_REF_NAME}" \
+            --notes "Build otomatis GitHub Actions (runner macos-13). Dikompilasi dengan deployment target macOS 10.13, tetapi BELUM diuji berjalan di High Sierra karena runner menggunakan macOS lebih baru."
+
+      - name: Catatan kejujuran build
+        run: |
+          echo "Runner ini macOS 13 (Ventura), bukan High Sierra."
+          echo "Artifact dikompilasi dengan -mmacosx-version-min=10.13 dan hanya memakai API yang ada di 10.13,"
+          echo "namun klaim 'teruji di High Sierra' TIDAK dibuat karena tidak ada perangkat uji 10.13 di pipeline ini."
