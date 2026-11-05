@@ -98,6 +98,9 @@ static float *MYRowProfile(unsigned char *px, size_t w, size_t h, size_t sy, siz
 @property (nonatomic, strong) NSTextField *formatExample;
 @property (nonatomic, strong) NSWindow *hudWindow;
 @property (nonatomic, strong) NSTextField *hudLabel;
+@property (nonatomic, strong) NSStatusItem *statusItem;
+@property (nonatomic, strong) NSButton *launchAgentCheck;
+@property (nonatomic, strong) NSTextField *noteLabel;
 @property (nonatomic, assign) CGImageRef lastCapture;
 @property (nonatomic, assign) CGFloat lastScale;
 @property (nonatomic, assign) MYCaptureMode mode;
@@ -204,6 +207,8 @@ static float *MYRowProfile(unsigned char *px, size_t w, size_t h, size_t sy, siz
     if (logo) [NSApp setApplicationIconImage:logo];
     [self trackFrontmostApp];
     [self buildMainWindow];
+    [self buildStatusItem];
+    [self buildMainMenu];
     [self registerHotKey];
     [self.mainWindow makeKeyAndOrderFront:nil];
     [NSApp activateIgnoringOtherApps:YES];
@@ -220,31 +225,31 @@ static float *MYRowProfile(unsigned char *px, size_t w, size_t h, size_t sy, siz
 }
 
 - (void)buildMainWindow {
-    NSRect frame = NSMakeRect(0, 0, 500, 208);
+    NSRect frame = NSMakeRect(0, 0, 500, 232);
     self.mainWindow = [[NSWindow alloc] initWithContentRect:frame styleMask:(NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskMiniaturizable) backing:NSBackingStoreBuffered defer:NO];
     self.mainWindow.title = @"Mysnap";
     self.mainWindow.delegate = self;
     [self.mainWindow center];
     NSView *content = self.mainWindow.contentView;
     NSImage *logo = MYLogoImage();
-    self.logoView = [[NSImageView alloc] initWithFrame:NSMakeRect(16, 156, 36, 36)];
+    self.logoView = [[NSImageView alloc] initWithFrame:NSMakeRect(16, 180, 36, 36)];
     if (logo) self.logoView.image = logo;
     [content addSubview:self.logoView];
-    NSTextField *title = [[NSTextField alloc] initWithFrame:NSMakeRect(60, 162, 200, 24)];
+    NSTextField *title = [[NSTextField alloc] initWithFrame:NSMakeRect(60, 186, 200, 24)];
     title.stringValue = @"Mysnap";
     title.bezeled = NO;
     title.drawsBackground = NO;
     title.editable = NO;
     title.font = [NSFont boldSystemFontOfSize:18];
     [content addSubview:title];
-    self.statusLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(60, 142, 420, 16)];
+    self.statusLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(60, 166, 420, 16)];
     self.statusLabel.bezeled = NO;
     self.statusLabel.drawsBackground = NO;
     self.statusLabel.editable = NO;
     self.statusLabel.font = [NSFont systemFontOfSize:11];
     self.statusLabel.textColor = [NSColor secondaryLabelColor];
     [content addSubview:self.statusLabel];
-    self.modeControl = [[NSSegmentedControl alloc] initWithFrame:NSMakeRect(16, 96, 468, 28)];
+    self.modeControl = [[NSSegmentedControl alloc] initWithFrame:NSMakeRect(16, 120, 468, 28)];
     self.modeControl.segmentCount = 3;
     [self.modeControl setLabel:@"Area Pilihan" forSegment:0];
     [self.modeControl setLabel:@"Seluruh Layar" forSegment:1];
@@ -257,22 +262,22 @@ static float *MYRowProfile(unsigned char *px, size_t w, size_t h, size_t sy, siz
     self.modeControl.action = @selector(modeChanged:);
     [content addSubview:self.modeControl];
     NSButton *captureButton = [NSButton buttonWithTitle:@"Tangkap Sekarang" target:self action:@selector(captureClicked:)];
-    captureButton.frame = NSMakeRect(16, 60, 150, 28);
+    captureButton.frame = NSMakeRect(16, 84, 150, 28);
     captureButton.bezelStyle = NSBezelStyleRounded;
     captureButton.keyEquivalent = @"\r";
     [content addSubview:captureButton];
     NSButton *settingsButton = [NSButton buttonWithTitle:@"Pengaturan" target:self action:@selector(openSettings:)];
-    settingsButton.frame = NSMakeRect(174, 60, 110, 28);
+    settingsButton.frame = NSMakeRect(174, 84, 110, 28);
     settingsButton.bezelStyle = NSBezelStyleRounded;
     [content addSubview:settingsButton];
-    self.hintLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(16, 30, 468, 18)];
+    self.hintLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(16, 54, 468, 18)];
     self.hintLabel.bezeled = NO;
     self.hintLabel.drawsBackground = NO;
     self.hintLabel.editable = NO;
     self.hintLabel.alignment = NSTextAlignmentCenter;
     self.hintLabel.font = [NSFont systemFontOfSize:12];
     [content addSubview:self.hintLabel];
-    self.savedLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(16, 10, 468, 16)];
+    self.savedLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(16, 32, 468, 16)];
     self.savedLabel.bezeled = NO;
     self.savedLabel.drawsBackground = NO;
     self.savedLabel.editable = NO;
@@ -280,6 +285,15 @@ static float *MYRowProfile(unsigned char *px, size_t w, size_t h, size_t sy, siz
     self.savedLabel.font = [NSFont systemFontOfSize:11];
     self.savedLabel.textColor = [NSColor secondaryLabelColor];
     [content addSubview:self.savedLabel];
+    self.noteLabel = [[NSTextField alloc] initWithFrame:NSMakeRect(16, 10, 468, 16)];
+    self.noteLabel.bezeled = NO;
+    self.noteLabel.drawsBackground = NO;
+    self.noteLabel.editable = NO;
+    self.noteLabel.alignment = NSTextAlignmentCenter;
+    self.noteLabel.font = [NSFont systemFontOfSize:10];
+    self.noteLabel.textColor = [NSColor secondaryLabelColor];
+    self.noteLabel.stringValue = @"Menutup jendela tidak keluar dari Mysnap: ikon menu bar (kanan atas) menjaga aplikasi dan Control + S tetap aktif. Keluar: menu ikon itu atau Command + Q.";
+    [content addSubview:self.noteLabel];
     [self refreshModeTexts];
 }
 
@@ -306,7 +320,7 @@ static float *MYRowProfile(unsigned char *px, size_t w, size_t h, size_t sy, siz
     hotKeyID.id = 1;
     OSStatus status = RegisterEventHotKey(kVK_ANSI_S, controlKey, hotKeyID, GetApplicationEventTarget(), 0, &MYHotKeyRef);
     if (status == noErr) {
-        self.statusLabel.stringValue = @"Shortcut global: TERDAFTAR (Control + S). Hanya aktif selama Mysnap berjalan.";
+        self.statusLabel.stringValue = @"Shortcut global: TERDAFTAR (Control + S). Aktif selama proses Mysnap hidup - jendela boleh ditutup, ikon menu bar menjaga aplikasi tetap berjalan.";
     } else {
         MYHotKeyRef = NULL;
         self.statusLabel.stringValue = @"Shortcut global: GAGAL didaftarkan. Control + S kemungkinan bentrok dengan aplikasi lain.";
@@ -339,11 +353,14 @@ static OSStatus MYHotKeyHandler(EventHandlerCallRef next, EventRef event, void *
 }
 
 - (void)windowWillClose:(NSNotification *)note {
-    if (note.object == self.mainWindow) {
-        [NSApp terminate:nil];
-    } else if (note.object == self.previewWindow && !self.previewClosing) {
+    if (note.object == self.previewWindow && !self.previewClosing) {
         [self previewCancel:nil];
     }
+}
+
+- (BOOL)applicationShouldHandleReopen:(NSApplication *)theApplication hasVisibleWindows:(BOOL)flag {
+    [self showMainWithMessage:@""];
+    return YES;
 }
 
 - (void)windowDidResize:(NSNotification *)note {
@@ -639,6 +656,13 @@ static OSStatus MYHotKeyHandler(EventHandlerCallRef next, EventRef event, void *
     openLogin.frame = NSMakeRect(16, 68, 150, 28);
     openLogin.bezelStyle = NSBezelStyleRounded;
     [content addSubview:openLogin];
+    self.launchAgentCheck = [[NSButton alloc] initWithFrame:NSMakeRect(16, 40, 400, 20)];
+    self.launchAgentCheck.title = @"Mulai otomatis saat login (LaunchAgent, atas izin Anda)";
+    self.launchAgentCheck.buttonType = NSButtonTypeSwitch;
+    self.launchAgentCheck.target = self;
+    self.launchAgentCheck.action = @selector(toggleLaunchAgent:);
+    self.launchAgentCheck.font = [NSFont systemFontOfSize:12];
+    [content addSubview:self.launchAgentCheck];
     NSButton *close = [NSButton buttonWithTitle:@"Tutup" target:self action:@selector(closeSettings:)];
     close.frame = NSMakeRect(428, 20, 76, 28);
     close.bezelStyle = NSBezelStyleRounded;
@@ -660,6 +684,7 @@ static OSStatus MYHotKeyHandler(EventHandlerCallRef next, EventRef event, void *
     self.folderField.stringValue = folder ?: @"(belum diatur - Anda akan ditanya saat menyimpan pertama kali)";
     NSString *format = [[NSUserDefaults standardUserDefaults] stringForKey:@"MYFilenameFormat"];
     self.formatField.stringValue = format ?: @"Mysnap_yyyy-MM-dd_HH.mm.ss";
+    self.launchAgentCheck.state = [[NSFileManager defaultManager] fileExistsAtPath:[self launchAgentPlistPath]] ? NSControlStateValueOn : NSControlStateValueOff;
     [self formatChanged:nil];
 }
 
@@ -696,6 +721,104 @@ static OSStatus MYHotKeyHandler(EventHandlerCallRef next, EventRef event, void *
     if (format.length > 0) [defaults setObject:format forKey:@"MYFilenameFormat"];
     [defaults synchronize];
     [self.settingsWindow orderOut:nil];
+}
+
+- (void)buildStatusItem {
+    self.statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSSquareStatusItemLength];
+    NSImage *icon = MYLogoImage();
+    if (icon) {
+        icon.size = NSMakeSize(18, 18);
+        self.statusItem.button.image = icon;
+    }
+    NSMenu *menu = [[NSMenu alloc] init];
+    NSMenuItem *show = [[NSMenuItem alloc] initWithTitle:@"Tampilkan Mysnap" action:@selector(statusShow:) keyEquivalent:@""];
+    show.target = self;
+    [menu addItem:show];
+    NSMenuItem *capture = [[NSMenuItem alloc] initWithTitle:@"Tangkap Sekarang" action:@selector(statusCapture:) keyEquivalent:@""];
+    capture.target = self;
+    [menu addItem:capture];
+    NSMenuItem *settings = [[NSMenuItem alloc] initWithTitle:@"Pengaturan..." action:@selector(statusSettings:) keyEquivalent:@""];
+    settings.target = self;
+    [menu addItem:settings];
+    [menu addItem:[NSMenuItem separatorItem]];
+    NSMenuItem *quit = [[NSMenuItem alloc] initWithTitle:@"Keluar Mysnap" action:@selector(statusQuit:) keyEquivalent:@""];
+    quit.target = self;
+    [menu addItem:quit];
+    self.statusItem.menu = menu;
+}
+
+- (void)buildMainMenu {
+    NSMenu *mainMenu = [[NSMenu alloc] init];
+    NSMenuItem *appMenuItem = [[NSMenuItem alloc] init];
+    NSMenu *appMenu = [[NSMenu alloc] initWithTitle:@"Mysnap"];
+    [appMenu addItemWithTitle:@"Sembunyikan Mysnap" action:@selector(hide:) keyEquivalent:@"h"];
+    [appMenu addItem:[NSMenuItem separatorItem]];
+    [appMenu addItemWithTitle:@"Keluar Mysnap" action:@selector(terminate:) keyEquivalent:@"q"];
+    [appMenuItem setSubmenu:appMenu];
+    [mainMenu addItem:appMenuItem];
+    [NSApp setMainMenu:mainMenu];
+}
+
+- (void)statusShow:(id)sender {
+    [self showMainWithMessage:@""];
+}
+
+- (void)statusCapture:(id)sender {
+    [self startCapture];
+}
+
+- (void)statusSettings:(id)sender {
+    [self openSettings:nil];
+}
+
+- (void)statusQuit:(id)sender {
+    [NSApp terminate:nil];
+}
+
+- (NSString *)launchAgentPlistPath {
+    NSString *dir = [NSHomeDirectory() stringByAppendingPathComponent:@"Library/LaunchAgents"];
+    return [dir stringByAppendingPathComponent:@"com.mysnap.agent.plist"];
+}
+
+- (void)runLaunchctl:(NSArray *)arguments {
+    NSTask *task = [[NSTask alloc] init];
+    task.launchPath = @"/bin/launchctl";
+    task.arguments = arguments;
+    @try {
+        [task launch];
+        [task waitUntilExit];
+    } @catch (NSException *e) {
+    }
+}
+
+- (void)toggleLaunchAgent:(id)sender {
+    NSString *path = [self launchAgentPlistPath];
+    NSFileManager *fm = [NSFileManager defaultManager];
+    if (self.launchAgentCheck.state == NSControlStateValueOn) {
+        NSString *dir = [path stringByDeletingLastPathComponent];
+        NSError *dirError = nil;
+        if (![fm fileExistsAtPath:dir] && ![fm createDirectoryAtPath:dir withIntermediateDirectories:YES attributes:nil error:&dirError]) {
+            self.launchAgentCheck.state = NSControlStateValueOff;
+            MYShowAlert(@"Gagal memasang LaunchAgent", [NSString stringWithFormat:@"Tidak dapat membuat folder %@. %@", dir, dirError.localizedDescription ?: @""]);
+            return;
+        }
+        NSDictionary *plist = @{
+            @"Label": @"com.mysnap.agent",
+            @"ProgramArguments": @[[[NSBundle mainBundle] executablePath]],
+            @"RunAtLoad": @YES,
+            @"LimitLoadToSessionType": @"Aqua"
+        };
+        if (![plist writeToFile:path atomically:YES]) {
+            self.launchAgentCheck.state = NSControlStateValueOff;
+            MYShowAlert(@"Gagal memasang LaunchAgent", [NSString stringWithFormat:@"Tidak dapat menulis %@.", path]);
+            return;
+        }
+        [self runLaunchctl:@[@"load", @"-w", path]];
+        MYShowAlert(@"LaunchAgent dipasang", @"Mysnap akan otomatis berjalan di latar setiap Anda login, sehingga Control + S siap dipakai tanpa membuka aplikasi terlebih dahulu. Matikan kapan saja lewat kotak centang yang sama.");
+    } else {
+        [self runLaunchctl:@[@"unload", @"-w", path]];
+        [fm removeItemAtPath:path error:nil];
+    }
 }
 
 - (void)showHud:(NSString *)text {
